@@ -37,6 +37,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+    entrypoint: /app/celery-entrypoint.sh
     command: celery -A ad_manager beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     env_file:
       - ../.env

@@ -26,5 +26,21 @@ except Exception:
 done
 echo "Redis is ready."
 
-echo "Starting Celery worker..."
-exec celery -A ad_manager worker -l info
+echo "Waiting for database migrations..."
+until python -c "
+import django, sys
+django.setup()
+from django.db import connection
+try:
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT 1 FROM django_celery_beat_periodictask LIMIT 1')
+except Exception:
+    sys.exit(1)
+"; do
+    echo "Migrations not yet applied - sleeping 3s"
+    sleep 3
+done
+echo "Migrations are ready."
+
+echo "Starting: $@"
+exec "$@"
