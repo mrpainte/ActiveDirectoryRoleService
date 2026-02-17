@@ -25,16 +25,16 @@ seed-roles:  ## Seed default roles
 	cd ad_manager && python manage.py seed_roles
 
 docker-build:  ## Build Docker images
-	$(DOCKER_COMPOSE) -f docker/docker-compose.yml build
+	$(DOCKER_COMPOSE) --env-file .env -f docker/docker-compose.yml build
 
 docker-up:  ## Start all services
-	$(DOCKER_COMPOSE) -f docker/docker-compose.yml up -d
+	$(DOCKER_COMPOSE) --env-file .env -f docker/docker-compose.yml up -d
 
 docker-down:  ## Stop all services
-	$(DOCKER_COMPOSE) -f docker/docker-compose.yml down
+	$(DOCKER_COMPOSE) --env-file .env -f docker/docker-compose.yml down
 
 docker-logs:  ## View logs
-	$(DOCKER_COMPOSE) -f docker/docker-compose.yml logs -f
+	$(DOCKER_COMPOSE) --env-file .env -f docker/docker-compose.yml logs -f
 
 celery-worker:  ## Run Celery worker
 	cd ad_manager && celery -A ad_manager worker -l info
