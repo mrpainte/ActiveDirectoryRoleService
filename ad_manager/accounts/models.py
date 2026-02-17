@@ -31,7 +31,7 @@ class UserProfile(models.Model):
         on_delete=models.CASCADE,
     )
     ad_dn = models.TextField(blank=True, default='', help_text='AD Distinguished Name')
-    ad_guid = models.CharField(max_length=36, blank=True, default='', help_text='AD objectGUID')
+    ad_guid = models.CharField(max_length=64, blank=True, default='', help_text='AD objectGUID')
     roles = models.ManyToManyField(Role, blank=True)
     last_synced = models.DateTimeField(auto_now=True)
 
