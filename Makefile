@@ -1,5 +1,8 @@
 .PHONY: help dev migrate shell collectstatic docker-up docker-down docker-build
 
+# Detect docker compose command (plugin vs standalone)
+DOCKER_COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
+
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
@@ -22,16 +25,16 @@ seed-roles:  ## Seed default roles
 	cd ad_manager && python manage.py seed_roles
 
 docker-build:  ## Build Docker images
-	docker compose -f docker/docker-compose.yml build
+	$(DOCKER_COMPOSE) -f docker/docker-compose.yml build
 
 docker-up:  ## Start all services
-	docker compose -f docker/docker-compose.yml up -d
+	$(DOCKER_COMPOSE) -f docker/docker-compose.yml up -d
 
 docker-down:  ## Stop all services
-	docker compose -f docker/docker-compose.yml down
+	$(DOCKER_COMPOSE) -f docker/docker-compose.yml down
 
 docker-logs:  ## View logs
-	docker compose -f docker/docker-compose.yml logs -f
+	$(DOCKER_COMPOSE) -f docker/docker-compose.yml logs -f
 
 celery-worker:  ## Run Celery worker
 	cd ad_manager && celery -A ad_manager worker -l info
