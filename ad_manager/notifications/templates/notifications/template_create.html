@@ -3,6 +3,7 @@
 {% block title %}Create Email Template{% endblock %}
 
 {% block content %}
+{% include "notifications/_nav.html" with active_tab="templates" %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Create Email Template</h2>
     <a href="{% url 'notifications:template_list' %}" class="btn btn-outline-secondary btn-sm">Back to List</a>
@@ -25,7 +26,7 @@
     <div class="mb-3">
         <label class="form-label">Subject</label>
         {{ form.subject }}
-        <div class="form-text">Supports Django template variables: <code>{{ "{{ domain }}" }}</code>, <code>{{ "{{ display_name }}" }}</code>, etc.</div>
+        <div class="form-text">Supports Django template variables: <code>{% verbatim %}{{ domain }}{% endverbatim %}</code>, <code>{% verbatim %}{{ display_name }}{% endverbatim %}</code>, etc.</div>
     </div>
 
     <div class="mb-3">

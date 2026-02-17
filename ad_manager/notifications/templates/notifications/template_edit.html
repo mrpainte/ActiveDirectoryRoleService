@@ -3,6 +3,7 @@
 {% block title %}Edit Template: {{ email_template.name }}{% endblock %}
 
 {% block content %}
+{% include "notifications/_nav.html" with active_tab="templates" %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Edit Template: <code>{{ email_template.name }}</code></h2>
     <div class="d-flex gap-2">
@@ -32,7 +33,7 @@
     <div class="mb-3">
         <label class="form-label">Subject</label>
         {{ form.subject }}
-        <div class="form-text">Supports Django template variables like <code>{{ "{{ display_name }}" }}</code>. Click "Template Syntax Reference" above for help.</div>
+        <div class="form-text">Supports Django template variables like <code>{% verbatim %}{{ display_name }}{% endverbatim %}</code>. Click "Template Syntax Reference" above for help.</div>
     </div>
 
     <div class="mb-3">
@@ -78,29 +79,29 @@
                         <tr><th>Syntax</th><th>Description</th><th>Example Output</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>{{ "{{ display_name }}" }}</code></td><td>User's full display name</td><td>John Doe</td></tr>
-                        <tr><td><code>{{ "{{ username }}" }}</code></td><td>User's sAMAccountName</td><td>jdoe</td></tr>
-                        <tr><td><code>{{ "{{ email }}" }}</code></td><td>User's email address</td><td>jdoe@example.com</td></tr>
-                        <tr><td><code>{{ "{{ domain }}" }}</code></td><td>AD domain name</td><td>EXAMPLE</td></tr>
-                        <tr><td><code>{{ "{{ temporary_password }}" }}</code></td><td>Temp password (welcome emails)</td><td>T3mp!Pass_Ex@mple</td></tr>
-                        <tr><td><code>{{ "{{ days_until_expiry }}" }}</code></td><td>Days until password expires</td><td>7</td></tr>
-                        <tr><td><code>{{ "{{ expiry_date }}" }}</code></td><td>Password expiration date</td><td>March 15, 2026</td></tr>
-                        <tr><td><code>{{ "{{ reset_link }}" }}</code></td><td>Password reset URL</td><td>https://...</td></tr>
+                        <tr><td><code>{% verbatim %}{{ display_name }}{% endverbatim %}</code></td><td>User's full display name</td><td>John Doe</td></tr>
+                        <tr><td><code>{% verbatim %}{{ username }}{% endverbatim %}</code></td><td>User's sAMAccountName</td><td>jdoe</td></tr>
+                        <tr><td><code>{% verbatim %}{{ email }}{% endverbatim %}</code></td><td>User's email address</td><td>jdoe@example.com</td></tr>
+                        <tr><td><code>{% verbatim %}{{ domain }}{% endverbatim %}</code></td><td>AD domain name</td><td>EXAMPLE</td></tr>
+                        <tr><td><code>{% verbatim %}{{ temporary_password }}{% endverbatim %}</code></td><td>Temp password (welcome emails)</td><td>T3mp!Pass_Ex@mple</td></tr>
+                        <tr><td><code>{% verbatim %}{{ days_until_expiry }}{% endverbatim %}</code></td><td>Days until password expires</td><td>7</td></tr>
+                        <tr><td><code>{% verbatim %}{{ expiry_date }}{% endverbatim %}</code></td><td>Password expiration date</td><td>March 15, 2026</td></tr>
+                        <tr><td><code>{% verbatim %}{{ reset_link }}{% endverbatim %}</code></td><td>Password reset URL</td><td>https://...</td></tr>
                     </tbody>
                 </table>
                 <div class="alert alert-info small">
-                    <strong>Tip:</strong> You can invent your own variables. Just use <code>{{ "{{ my_var }}" }}</code> in the body, and supply a value when sending via the Send Email page.
+                    <strong>Tip:</strong> You can invent your own variables. Just use <code>{% verbatim %}{{ my_var }}{% endverbatim %}</code> in the body, and supply a value when sending via the Send Email page.
                 </div>
 
                 <h6 class="fw-bold mt-4">Filters</h6>
                 <table class="table table-sm table-bordered">
                     <thead class="table-light"><tr><th>Syntax</th><th>Result</th></tr></thead>
                     <tbody>
-                        <tr><td><code>{{ "{{ name|upper }}" }}</code></td><td>JOHN DOE</td></tr>
-                        <tr><td><code>{{ "{{ name|lower }}" }}</code></td><td>john doe</td></tr>
-                        <tr><td><code>{{ "{{ name|title }}" }}</code></td><td>John Doe</td></tr>
-                        <tr><td><code>{{ "{{ email|default:'N/A' }}" }}</code></td><td>Fallback if empty</td></tr>
-                        <tr><td><code>{{ "{{ count|add:1 }}" }}</code></td><td>Adds to a number</td></tr>
+                        <tr><td><code>{% verbatim %}{{ name|upper }}{% endverbatim %}</code></td><td>JOHN DOE</td></tr>
+                        <tr><td><code>{% verbatim %}{{ name|lower }}{% endverbatim %}</code></td><td>john doe</td></tr>
+                        <tr><td><code>{% verbatim %}{{ name|title }}{% endverbatim %}</code></td><td>John Doe</td></tr>
+                        <tr><td><code>{% verbatim %}{{ email|default:'N/A' }}{% endverbatim %}</code></td><td>Fallback if empty</td></tr>
+                        <tr><td><code>{% verbatim %}{{ count|add:1 }}{% endverbatim %}</code></td><td>Adds to a number</td></tr>
                     </tbody>
                 </table>
 

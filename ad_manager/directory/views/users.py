@@ -158,8 +158,12 @@ class UserCreateView(RoleRequiredMixin, View):
                 '(objectClass=organizationalUnit)',
                 ['distinguishedName', 'ou'],
             )
-            choices = [(ou['dn'], ou['attributes'].get('ou', ou['dn']))
-                       for ou in ous]
+            choices = []
+            for ou in ous:
+                ou_name = ou['attributes'].get('ou', ou['dn'])
+                if isinstance(ou_name, list):
+                    ou_name = ou_name[0] if ou_name else ou['dn']
+                choices.append((ou['dn'], ou_name))
             choices.sort(key=lambda c: c[1].lower())
             return choices
         except LDAPServiceError:

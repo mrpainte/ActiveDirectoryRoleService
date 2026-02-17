@@ -10,6 +10,8 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 from core.constants import ROLE_ADMIN, DEFAULT_PAGE_SIZE
 from core.mixins import RoleRequiredMixin
 from notifications.forms import (
@@ -29,6 +31,15 @@ from notifications.tasks import send_notification_email, send_bulk_email
 logger = logging.getLogger(__name__)
 
 PASSWORD_RESET_MAX_AGE = 3600  # 1 hour
+
+
+class NotificationIndexView(LoginRequiredMixin, View):
+    """Redirect to the appropriate notifications landing page based on role."""
+
+    def get(self, request):
+        if hasattr(request, 'highest_role') and request.highest_role == ROLE_ADMIN:
+            return redirect('notifications:config')
+        return redirect('notifications:password_reset_request')
 
 
 class NotificationConfigView(RoleRequiredMixin, View):

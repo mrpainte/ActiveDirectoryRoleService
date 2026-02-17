@@ -1,0 +1,14 @@
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'config' %}active{% endif %}" href="{% url 'notifications:config' %}">Configuration</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'templates' %}active{% endif %}" href="{% url 'notifications:template_list' %}">Email Templates</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'send' %}active{% endif %}" href="{% url 'notifications:send_email' %}">Send Email</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'history' %}active{% endif %}" href="{% url 'notifications:history' %}">Send History</a>
+    </li>
+</ul>

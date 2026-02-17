@@ -3,6 +3,7 @@
 {% block title %}Test Template: {{ email_template.name }}{% endblock %}
 
 {% block content %}
+{% include "notifications/_nav.html" with active_tab="templates" %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Test Template: <code>{{ email_template.name }}</code></h2>
     <div class="d-flex gap-2">
@@ -29,7 +30,7 @@
                     {% for var in variables %}
                     <div class="mb-2">
                         <label class="form-label fw-bold mb-0">
-                            <code>{{ "{{" }} {{ var.name }} {{ "}}" }}</code>
+                            <code>{% verbatim %}{{{% endverbatim %} {{ var.name }} {% verbatim %}}}{% endverbatim %}</code>
                         </label>
                         <input type="text" class="form-control form-control-sm" name="var_{{ var.name }}"
                                value="{{ var.current_value|default:'' }}"
@@ -95,10 +96,9 @@
                 <strong>Subject:</strong> {{ rendered_subject }}
             </div>
             {% endif %}
-            <div class="card-body">
-                <div class="border rounded p-3 bg-white">
-                    {{ rendered_html|safe }}
-                </div>
+            <div class="card-body p-0">
+                <iframe id="previewFrame" class="w-100 border-0" style="min-height: 400px;"></iframe>
+                <script type="text/html" id="previewContent">{{ rendered_html|safe }}</script>
             </div>
         </div>
         {% else %}
@@ -129,49 +129,49 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><code>{{ "{{ display_name }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ display_name }}{% endverbatim %}</code></td>
                             <td>User's full display name</td>
                             <td>John Doe</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ username }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ username }}{% endverbatim %}</code></td>
                             <td>User's sAMAccountName (login name)</td>
                             <td>jdoe</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ email }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ email }}{% endverbatim %}</code></td>
                             <td>User's email address</td>
                             <td>jdoe@example.com</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ domain }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ domain }}{% endverbatim %}</code></td>
                             <td>Active Directory domain name</td>
                             <td>EXAMPLE</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ temporary_password }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ temporary_password }}{% endverbatim %}</code></td>
                             <td>Temporary password (welcome emails)</td>
                             <td>T3mp!Pass_Ex@mple</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ days_until_expiry }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ days_until_expiry }}{% endverbatim %}</code></td>
                             <td>Days until password expires</td>
                             <td>7</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ expiry_date }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ expiry_date }}{% endverbatim %}</code></td>
                             <td>Password expiration date</td>
                             <td>March 15, 2026</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ reset_link }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ reset_link }}{% endverbatim %}</code></td>
                             <td>Password reset URL</td>
                             <td>https://admanager.example.com/...</td>
                         </tr>
                     </tbody>
                 </table>
                 <div class="alert alert-info small">
-                    <strong>Tip:</strong> You can use any variable name you want. Just include <code>{{ "{{ my_variable }}" }}</code> in the template, and provide a value when sending. The variables above are automatically available in system-triggered emails.
+                    <strong>Tip:</strong> You can use any variable name you want. Just include <code>{% verbatim %}{{ my_variable }}{% endverbatim %}</code> in the template, and provide a value when sending. The variables above are automatically available in system-triggered emails.
                 </div>
 
                 <!-- Filters -->
@@ -183,32 +183,32 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><code>{{ "{{ display_name|upper }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ display_name|upper }}{% endverbatim %}</code></td>
                             <td>Convert to UPPERCASE</td>
                             <td>JOHN DOE</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ display_name|lower }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ display_name|lower }}{% endverbatim %}</code></td>
                             <td>Convert to lowercase</td>
                             <td>john doe</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ display_name|title }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ display_name|title }}{% endverbatim %}</code></td>
                             <td>Title Case</td>
                             <td>John Doe</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ display_name|truncatewords:3 }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ display_name|truncatewords:3 }}{% endverbatim %}</code></td>
                             <td>Truncate to N words</td>
                             <td>John Doe ...</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ email|default:'N/A' }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ email|default:'N/A' }}{% endverbatim %}</code></td>
                             <td>Fallback if variable is empty</td>
                             <td>N/A</td>
                         </tr>
                         <tr>
-                            <td><code>{{ "{{ days_until_expiry|add:1 }}" }}</code></td>
+                            <td><code>{% verbatim %}{{ days_until_expiry|add:1 }}{% endverbatim %}</code></td>
                             <td>Add to a number</td>
                             <td>8</td>
                         </tr>
@@ -286,6 +286,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 input.value = input.placeholder;
             }
         });
+    }
+
+    // Write rendered HTML into sandboxed iframe and auto-resize
+    const frame = document.getElementById('previewFrame');
+    const contentEl = document.getElementById('previewContent');
+    if (frame && contentEl) {
+        const doc = frame.contentDocument || frame.contentWindow.document;
+        doc.open();
+        doc.write(contentEl.textContent);
+        doc.close();
+        function resizeFrame() {
+            try {
+                frame.style.height = Math.max(400, doc.documentElement.scrollHeight) + 'px';
+            } catch(e) {}
+        }
+        frame.addEventListener('load', resizeFrame);
+        setTimeout(resizeFrame, 200);
     }
 });
 </script>

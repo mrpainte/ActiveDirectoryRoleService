@@ -1,0 +1,74 @@
+services:
+  samba-dc:
+    build:
+      context: samba
+      dockerfile: Dockerfile
+    hostname: samba-dc
+    privileged: true
+    environment:
+      SAMBA_DOMAIN: DEV
+      SAMBA_REALM: DEV.LOCAL
+      SAMBA_ADMIN_PASSWORD: "AdminP@ss123!"
+    ports:
+      - "3890:389"
+    volumes:
+      - samba-data:/var/lib/samba
+    networks:
+      ad-manager-net:
+        aliases:
+          - samba-dc
+    healthcheck:
+      test: ["CMD-SHELL", "samba-tool processes 2>/dev/null | grep -q ldap_server || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 12
+    restart: unless-stopped
+
+  web:
+    depends_on:
+      samba-dc:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+    env_file:
+      - ../.env.dev
+    environment:
+      DJANGO_SETTINGS_MODULE: ad_manager.settings.development
+    ports:
+      - "8000:8000"
+
+  celery-worker:
+    env_file:
+      - ../.env.dev
+    environment:
+      DJANGO_SETTINGS_MODULE: ad_manager.settings.development
+    depends_on:
+      samba-dc:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      web:
+        condition: service_started
+
+  celery-beat:
+    env_file:
+      - ../.env.dev
+    environment:
+      DJANGO_SETTINGS_MODULE: ad_manager.settings.development
+    depends_on:
+      samba-dc:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      web:
+        condition: service_started
+
+volumes:
+  samba-data:

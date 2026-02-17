@@ -6,6 +6,7 @@ from notifications import views
 app_name = 'notifications'
 
 urlpatterns = [
+    path('', views.NotificationIndexView.as_view(), name='index'),
     path('config/', views.NotificationConfigView.as_view(), name='config'),
     path('templates/', views.EmailTemplateListView.as_view(), name='template_list'),
     path('templates/create/', views.EmailTemplateCreateView.as_view(), name='template_create'),
