@@ -170,7 +170,93 @@ docker compose -f docker/docker-compose.yml exec web python manage.py seed_roles
 
 The web entrypoint automatically runs database migrations and collects static files on startup.
 
-## 3. Reverse Proxy Configuration
+## 3. Role Configuration
+
+The application uses role-based access control mapped to Active Directory groups. Users who log in without a matching role will see an empty interface and get 403 errors on most pages.
+
+### Seed Roles
+
+After the first deployment, create the default roles and email templates:
+
+```bash
+docker compose --env-file .env -f docker/docker-compose.yml exec web python manage.py seed_roles
+```
+
+This creates four roles with empty AD group mappings:
+
+| Role | Priority | Default Access |
+|------|----------|----------------|
+| **Admin** | 3 | Full access: all views, user creation, DNS, GPOs, audit log, notifications, delegation |
+| **HelpDesk** | 2 | Password resets, enable/disable/unlock users, GPO browsing, group management |
+| **GroupManager** | 1 | Manage members of delegated groups |
+| **ReadOnly** | 0 | Browse users, computers, OUs, groups, GPOs |
+
+### Map Roles to AD Groups
+
+Each role must be mapped to an AD group's Distinguished Name. When a user logs in, the application reads their `memberOf` attribute from AD and matches those DNs to determine which roles to assign.
+
+Update each role's `ad_group_dn` via the Django shell:
+
+```bash
+docker compose --env-file .env -f docker/docker-compose.yml exec web python manage.py shell
+```
+
+```python
+from accounts.models import Role
+
+# Map each role to an AD group DN
+Role.objects.filter(name='Admin').update(
+    ad_group_dn='CN=ADRS-Admins,OU=Groups,DC=example,DC=com'
+)
+Role.objects.filter(name='HelpDesk').update(
+    ad_group_dn='CN=ADRS-HelpDesk,OU=Groups,DC=example,DC=com'
+)
+Role.objects.filter(name='GroupManager').update(
+    ad_group_dn='CN=ADRS-GroupManagers,OU=Groups,DC=example,DC=com'
+)
+# Tip: map ReadOnly to a broad group like Domain Users so all
+# authenticated users can at least browse the directory
+Role.objects.filter(name='ReadOnly').update(
+    ad_group_dn='CN=Domain Users,CN=Users,DC=example,DC=com'
+)
+```
+
+Replace the DNs above with the actual Distinguished Names of your AD groups. You can find them with:
+
+```powershell
+# PowerShell on a domain controller
+Get-ADGroup -Identity "GroupName" | Select-Object DistinguishedName
+```
+
+### Verify Role Assignment
+
+After mapping roles, log out and log back in (roles are synced on each login). Then confirm your roles were assigned:
+
+```bash
+docker compose --env-file .env -f docker/docker-compose.yml exec web python manage.py shell
+```
+
+```python
+from django.contrib.auth.models import User
+user = User.objects.get(username='your_username')
+print(list(user.userprofile.roles.values_list('name', flat=True)))
+# Expected output: ['Admin', 'ReadOnly'] (or whichever roles match your AD groups)
+```
+
+### Navigation Visibility by Role
+
+| Nav Item | Visible To |
+|----------|-----------|
+| Dashboard, Users, Computers, OUs, Groups | All authenticated users |
+| DNS, GPOs | Admin only |
+| Audit Log | Admin only |
+| Notifications | All (but config pages require Admin) |
+| Password Reset / Enable / Disable / Unlock | Admin, HelpDesk |
+| Create User | Admin only |
+| Delegated Group Management | Admin |
+| My Groups | Admin, HelpDesk, GroupManager |
+
+## 4. Reverse Proxy Configuration
 
 Your external reverse proxy must:
 
@@ -214,7 +300,7 @@ When using an Application Load Balancer:
 - Forward to a target group pointing at the EC2 instance on port 80
 - ALB automatically sets `X-Forwarded-Proto` and `X-Forwarded-For`
 
-## 4. Post-Deployment Verification
+## 5. Post-Deployment Verification
 
 ```bash
 # Check all services are healthy
@@ -232,7 +318,7 @@ curl -I http://<ec2-private-ip>:80
 
 If everything is configured correctly, accessing `https://adrs.example.com` should show the login page.
 
-## 5. Maintenance
+## 6. Maintenance
 
 ```bash
 # View logs
@@ -254,7 +340,7 @@ docker compose -f docker/docker-compose.yml exec web python manage.py shell
 docker compose -f docker/docker-compose.yml exec postgres pg_dump -U ad_manager ad_manager > backup.sql
 ```
 
-## 6. Data Persistence
+## 7. Data Persistence
 
 The following Docker volumes persist data across container restarts:
 
