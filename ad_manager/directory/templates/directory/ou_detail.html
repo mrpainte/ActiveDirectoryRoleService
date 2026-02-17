@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load ad_filters %}
+
+{% block title %}OU Detail{% endblock %}
+
+{% block content %}
+{% if ou %}
+  {% with attrs=ou.attributes %}
+  <div class="mb-4">
+    <h2>{{ attrs.ou|default:ou.dn|dn_short }}</h2>
+    <p class="text-muted mb-0">{{ ou.dn }}</p>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">OU Attributes</h5>
+    </div>
+    <div class="card-body">
+      <table class="table table-sm">
+        <tbody>
+          <tr><th style="width:30%">Name</th><td>{{ attrs.ou|default:"-" }}</td></tr>
+          <tr><th>Description</th><td>{{ attrs.description|default:"-" }}</td></tr>
+          <tr><th>Created</th><td>{{ attrs.whenCreated|default:"-" }}</td></tr>
+          <tr><th>Modified</th><td>{{ attrs.whenChanged|default:"-" }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endwith %}
+
+  <!-- Objects in this OU -->
+  {% if ou_objects %}
+  <div class="row g-4">
+    <!-- Users -->
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h6 class="mb-0">Users ({{ ou_objects.users|length }})</h6>
+        </div>
+        <div class="card-body">
+          {% if ou_objects.users %}
+          <ul class="list-group list-group-flush">
+            {% for u in ou_objects.users %}
+            <li class="list-group-item">
+              <a href="{% url 'directory:user_detail' encoded_dn=u.dn|dn_encode %}">
+                {{ u.attributes.displayName|default:u.attributes.sAMAccountName }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted mb-0">No users in this OU.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Computers -->
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h6 class="mb-0">Computers ({{ ou_objects.computers|length }})</h6>
+        </div>
+        <div class="card-body">
+          {% if ou_objects.computers %}
+          <ul class="list-group list-group-flush">
+            {% for c in ou_objects.computers %}
+            <li class="list-group-item">
+              <a href="{% url 'directory:computer_detail' encoded_dn=c.dn|dn_encode %}">
+                {{ c.attributes.cn }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted mb-0">No computers in this OU.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Groups -->
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h6 class="mb-0">Groups ({{ ou_objects.groups|length }})</h6>
+        </div>
+        <div class="card-body">
+          {% if ou_objects.groups %}
+          <ul class="list-group list-group-flush">
+            {% for g in ou_objects.groups %}
+            <li class="list-group-item">
+              {{ g.attributes.cn }}
+              {% if g.attributes.description %}
+                <br><small class="text-muted">{{ g.attributes.description }}</small>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted mb-0">No groups in this OU.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+{% else %}
+  <div class="alert alert-danger">OU not found or could not be loaded.</div>
+{% endif %}
+
+<a href="{% url 'directory:ou_tree' %}" class="btn btn-outline-secondary mt-3">&larr; Back to OU Tree</a>
+{% endblock %}

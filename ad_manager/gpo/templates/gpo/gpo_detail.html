@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}GPO: {{ gpo.attributes.displayName }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'gpo:gpo_list' %}">Group Policy Objects</a></li>
+        <li class="breadcrumb-item active">{{ gpo.attributes.displayName|default:gpo.attributes.cn }}</li>
+    </ol>
+</nav>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="mb-0">{{ gpo.attributes.displayName|default:gpo.attributes.cn }}</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Distinguished Name</dt>
+            <dd class="col-sm-9"><code>{{ gpo.dn }}</code></dd>
+
+            <dt class="col-sm-3">Status</dt>
+            <dd class="col-sm-9">
+                <span class="badge bg-{{ gpo.status.badge }}">{{ gpo.status.label }}</span>
+            </dd>
+
+            <dt class="col-sm-3">SYSVOL Path</dt>
+            <dd class="col-sm-9"><code>{{ gpo.attributes.gPCFileSysPath|default:"-" }}</code></dd>
+
+            <dt class="col-sm-3">Version</dt>
+            <dd class="col-sm-9">{{ gpo.attributes.versionNumber|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Created</dt>
+            <dd class="col-sm-9">{{ gpo.attributes.whenCreated|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Last Modified</dt>
+            <dd class="col-sm-9">{{ gpo.attributes.whenChanged|default:"-" }}</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Linked Organizational Units</h5>
+    </div>
+    <div class="card-body">
+        {% if linked_ous %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>OU Name</th>
+                        <th>Distinguished Name</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ou in linked_ous %}
+                    <tr>
+                        <td>{{ ou.attributes.name|default:ou.attributes.ou }}</td>
+                        <td><code>{{ ou.dn }}</code></td>
+                        <td>{{ ou.attributes.description|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No organizational units are linked to this GPO.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

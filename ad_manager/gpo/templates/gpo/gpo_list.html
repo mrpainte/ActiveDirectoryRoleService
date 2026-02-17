@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Group Policy Objects{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Group Policy Objects</h1>
+
+{% if gpos %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Modified</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for gpo in gpos %}
+            <tr>
+                <td>
+                    <a href="{% url 'gpo:gpo_detail' encoded_dn=gpo.encoded_dn %}">
+                        {{ gpo.attributes.displayName|default:gpo.attributes.cn }}
+                    </a>
+                </td>
+                <td>
+                    <span class="badge bg-{{ gpo.status.badge }}">{{ gpo.status.label }}</span>
+                </td>
+                <td>{{ gpo.attributes.whenCreated|default:"-" }}</td>
+                <td>{{ gpo.attributes.whenChanged|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No Group Policy Objects found.</div>
+{% endif %}
+{% endblock %}

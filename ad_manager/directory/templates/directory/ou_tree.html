@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load ad_filters %}
+
+{% block title %}Organizational Units{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Organizational Unit Tree</h2>
+
+{% if tree %}
+<div class="card">
+  <div class="card-body">
+    <ul class="list-unstyled mb-0">
+      <li>
+        <strong>{{ tree.name }}</strong>
+        {% if tree.children %}
+        <ul class="list-unstyled ms-4 mt-2">
+          {% for node in tree.children %}
+            {% include "directory/partials/ou_node.html" with node=node %}
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </li>
+    </ul>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-warning">Could not load the OU tree.</div>
+{% endif %}
+{% endblock %}

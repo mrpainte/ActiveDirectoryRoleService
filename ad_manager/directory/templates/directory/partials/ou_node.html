@@ -1,0 +1,23 @@
+{% load ad_filters %}
+<li class="mb-1">
+  <span class="text-muted me-1">&#9656;</span>
+  <a href="{% url 'directory:ou_detail' encoded_dn=node.dn|dn_encode %}">{{ node.name }}</a>
+  {% if node.children %}
+  <div id="ou-children-{{ node.dn|dn_encode }}"
+       hx-get="{% url 'directory:ou_children' encoded_dn=node.dn|dn_encode %}"
+       hx-trigger="revealed"
+       hx-swap="innerHTML">
+    <ul class="list-unstyled ms-4 mt-1">
+      {% for child in node.children %}
+        {% include "directory/partials/ou_node.html" with node=child %}
+      {% endfor %}
+    </ul>
+  </div>
+  {% else %}
+  <div id="ou-children-{{ node.dn|dn_encode }}"
+       hx-get="{% url 'directory:ou_children' encoded_dn=node.dn|dn_encode %}"
+       hx-trigger="click from:previous a"
+       hx-swap="innerHTML">
+  </div>
+  {% endif %}
+</li>

@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Create User{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Create New User</h2>
+  <a href="{% url 'directory:user_list' %}" class="btn btn-outline-secondary">Back to Users</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form method="post" id="createUserForm">
+      {% csrf_token %}
+
+      <h5 class="card-title mb-3">Account Information</h5>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="sam_account_name" class="form-label">Username (sAMAccountName) <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="sam_account_name" name="sam_account_name"
+                 value="{{ form_data.sam_account_name|default:'' }}" required>
+        </div>
+        <div class="col-md-6">
+          <label for="ou_dn" class="form-label">Target OU <span class="text-danger">*</span></label>
+          <select class="form-select" id="ou_dn" name="ou_dn" required>
+            <option value="">-- Select OU --</option>
+            {% for dn, name in ou_choices %}
+            <option value="{{ dn }}" {% if form_data.ou_dn == dn %}selected{% endif %}>{{ name }} ({{ dn }})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <h5 class="card-title mb-3">Personal Details</h5>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="first_name" name="first_name"
+                 value="{{ form_data.first_name|default:'' }}" required>
+        </div>
+        <div class="col-md-6">
+          <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="last_name" name="last_name"
+                 value="{{ form_data.last_name|default:'' }}" required>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" class="form-control" id="email" name="email"
+                 value="{{ form_data.email|default:'' }}">
+        </div>
+        <div class="col-md-6">
+          <label for="telephone" class="form-label">Phone</label>
+          <input type="text" class="form-control" id="telephone" name="telephone"
+                 value="{{ form_data.telephone|default:'' }}">
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label for="title" class="form-label">Job Title</label>
+          <input type="text" class="form-control" id="title" name="title"
+                 value="{{ form_data.title|default:'' }}">
+        </div>
+        <div class="col-md-4">
+          <label for="department" class="form-label">Department</label>
+          <input type="text" class="form-control" id="department" name="department"
+                 value="{{ form_data.department|default:'' }}">
+        </div>
+        <div class="col-md-4">
+          <label for="company" class="form-label">Company</label>
+          <input type="text" class="form-control" id="company" name="company"
+                 value="{{ form_data.company|default:'' }}">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <input type="text" class="form-control" id="description" name="description"
+               value="{{ form_data.description|default:'' }}">
+      </div>
+
+      <h5 class="card-title mb-3">Password</h5>
+      <div class="row mb-3">
+        <div class="col-md-5">
+          <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <input type="text" class="form-control font-monospace" id="password" name="password" required>
+            <button type="button" class="btn btn-outline-secondary" id="togglePasswordVisibility" title="Toggle visibility">
+              <span id="eyeIcon">&#128065;</span>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <label for="confirm_password" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+          <input type="text" class="form-control font-monospace" id="confirm_password" name="confirm_password" required>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="button" class="btn btn-info w-100" id="generatePasswordBtn">Generate</button>
+        </div>
+      </div>
+
+      <div id="passwordRules" class="mb-3">
+        <small class="text-muted">Password requirements:</small>
+        <ul class="list-unstyled mb-0 ms-2">
+          <li id="rule-length"><small class="text-muted">&#9679; At least 15 characters</small></li>
+          <li id="rule-upper"><small class="text-muted">&#9679; At least 1 uppercase letter</small></li>
+          <li id="rule-lower"><small class="text-muted">&#9679; At least 1 lowercase letter</small></li>
+          <li id="rule-number"><small class="text-muted">&#9679; At least 1 number</small></li>
+          <li id="rule-special"><small class="text-muted">&#9679; At least 1 special character</small></li>
+          <li id="rule-match"><small class="text-muted">&#9679; Passwords match</small></li>
+        </ul>
+      </div>
+
+      <div class="mb-3">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="enabled" name="enabled"
+                 {% if form_data.enabled == 'on' or not form_data %}checked{% endif %}>
+          <label class="form-check-label" for="enabled">Enable account after creation</label>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="send_welcome_email" name="send_welcome_email"
+                 {% if form_data.send_welcome_email == 'on' or not form_data %}checked{% endif %}>
+          <label class="form-check-label" for="send_welcome_email">
+            Send welcome email with credentials to the user
+          </label>
+          <div class="form-text">Requires an email address. Uses the "welcome" email template.</div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary" id="submitBtn">Create User</button>
+        <a href="{% url 'directory:user_list' %}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordField = document.getElementById('password');
+    const confirmField = document.getElementById('confirm_password');
+    const generateBtn = document.getElementById('generatePasswordBtn');
+    const toggleBtn = document.getElementById('togglePasswordVisibility');
+
+    const rules = {
+        length:  { el: document.getElementById('rule-length'),  test: pw => pw.length >= 15 },
+        upper:   { el: document.getElementById('rule-upper'),   test: pw => /[A-Z]/.test(pw) },
+        lower:   { el: document.getElementById('rule-lower'),   test: pw => /[a-z]/.test(pw) },
+        number:  { el: document.getElementById('rule-number'),  test: pw => /[0-9]/.test(pw) },
+        special: { el: document.getElementById('rule-special'), test: pw => /[^A-Za-z0-9]/.test(pw) },
+        match:   { el: document.getElementById('rule-match'),   test: pw => pw && pw === confirmField.value },
+    };
+
+    function checkRules() {
+        const pw = passwordField.value;
+        for (const [key, rule] of Object.entries(rules)) {
+            const passed = rule.test(pw);
+            const small = rule.el.querySelector('small');
+            if (passed) {
+                small.className = 'text-success';
+                small.innerHTML = small.innerHTML.replace('&#9679;', '&#10003;').replace('\u25CF', '\u2713');
+            } else {
+                small.className = 'text-muted';
+                small.innerHTML = small.innerHTML.replace('&#10003;', '&#9679;').replace('\u2713', '\u25CF');
+            }
+        }
+    }
+
+    passwordField.addEventListener('input', checkRules);
+    confirmField.addEventListener('input', checkRules);
+
+    // Generate password button
+    generateBtn.addEventListener('click', function() {
+        fetch('{% url "directory:generate_password" %}')
+            .then(response => response.json())
+            .then(data => {
+                passwordField.value = data.password;
+                confirmField.value = data.password;
+                // Ensure fields are visible text so admin can see and copy
+                passwordField.type = 'text';
+                confirmField.type = 'text';
+                checkRules();
+            });
+    });
+
+    // Toggle password visibility
+    let visible = true;
+    toggleBtn.addEventListener('click', function() {
+        visible = !visible;
+        passwordField.type = visible ? 'text' : 'password';
+        confirmField.type = visible ? 'text' : 'password';
+    });
+});
+</script>
+{% endblock %}

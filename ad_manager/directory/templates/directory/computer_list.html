@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load ad_filters %}
+
+{% block title %}Computers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Computers</h2>
+  <span class="badge bg-secondary">{{ results.total }} total</span>
+</div>
+
+<form method="get" class="mb-4">
+  <div class="input-group">
+    <input type="text" name="q" class="form-control" placeholder="Search by name, DNS name, or description..."
+           value="{{ query }}">
+    <button class="btn btn-primary" type="submit">Search</button>
+    {% if query %}
+    <a href="{% url 'directory:computer_list' %}" class="btn btn-outline-secondary">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-striped table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>Name</th>
+        <th>DNS Name</th>
+        <th>Operating System</th>
+        <th>Last Logon</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in results.entries %}
+      <tr>
+        <td>
+          <a href="{% url 'directory:computer_detail' encoded_dn=entry.dn|dn_encode %}">
+            {{ entry.attributes.cn }}
+          </a>
+        </td>
+        <td>{{ entry.attributes.dNSHostName|default:"" }}</td>
+        <td>
+          {{ entry.attributes.operatingSystem|default:"" }}
+          {% if entry.attributes.operatingSystemVersion %}
+            <small class="text-muted">({{ entry.attributes.operatingSystemVersion }})</small>
+          {% endif %}
+        </td>
+        <td>
+          {% with ts=entry.attributes.lastLogonTimestamp|ad_timestamp %}
+            {% if ts %}{{ ts|date:"Y-m-d H:i" }}{% else %}-{% endif %}
+          {% endwith %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" class="text-center text-muted py-4">No computers found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if results.num_pages > 1 %}
+<nav aria-label="Computer pagination">
+  <ul class="pagination justify-content-center">
+    {% if results.page > 1 %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ results.page|add:"-1" }}{% if query %}&q={{ query }}{% endif %}">Previous</a>
+    </li>
+    {% endif %}
+    {% if results.page < results.num_pages %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ results.page|add:"1" }}{% if query %}&q={{ query }}{% endif %}">Next</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

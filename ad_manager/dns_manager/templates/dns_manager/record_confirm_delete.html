@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Delete DNS Record{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dns_manager:zone_list' %}">DNS Zones</a></li>
+        <li class="breadcrumb-item active">Delete Record</li>
+    </ol>
+</nav>
+
+<div class="card border-danger">
+    <div class="card-header bg-danger text-white">
+        <h4 class="mb-0">Confirm Delete</h4>
+    </div>
+    <div class="card-body">
+        <p>Are you sure you want to delete this DNS record?</p>
+        <dl class="row">
+            <dt class="col-sm-3">Distinguished Name</dt>
+            <dd class="col-sm-9"><code>{{ record.dn }}</code></dd>
+
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">{{ record.attributes.dc|default:record.attributes.name }}</dd>
+        </dl>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Delete Record</button>
+            <a href="{% url 'dns_manager:zone_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

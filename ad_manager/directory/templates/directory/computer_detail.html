@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load ad_filters %}
+
+{% block title %}Computer Detail{% endblock %}
+
+{% block content %}
+{% if computer %}
+  {% with attrs=computer.attributes %}
+  <div class="mb-4">
+    <h2>{{ attrs.cn }}</h2>
+    <p class="text-muted mb-0">{{ computer.dn }}</p>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Computer Attributes</h5>
+    </div>
+    <div class="card-body">
+      <table class="table table-sm">
+        <tbody>
+          <tr><th style="width:30%">Name (CN)</th><td>{{ attrs.cn|default:"-" }}</td></tr>
+          <tr><th>DNS Host Name</th><td>{{ attrs.dNSHostName|default:"-" }}</td></tr>
+          <tr><th>Operating System</th><td>{{ attrs.operatingSystem|default:"-" }}</td></tr>
+          <tr><th>OS Version</th><td>{{ attrs.operatingSystemVersion|default:"-" }}</td></tr>
+          <tr><th>Description</th><td>{{ attrs.description|default:"-" }}</td></tr>
+          <tr>
+            <th>Created</th>
+            <td>{{ attrs.whenCreated|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th>Last Logon</th>
+            <td>
+              {% with ts=attrs.lastLogonTimestamp|ad_timestamp %}
+                {% if ts %}{{ ts|date:"Y-m-d H:i:s T" }}{% else %}-{% endif %}
+              {% endwith %}
+            </td>
+          </tr>
+          <tr>
+            <th>UAC Flags</th>
+            <td>
+              {% for flag in attrs.userAccountControl|decode_uac %}
+                <span class="badge bg-secondary me-1">{{ flag }}</span>
+              {% endfor %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- All attributes dump -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">All Attributes</h5>
+    </div>
+    <div class="card-body">
+      <table class="table table-sm table-striped">
+        <thead>
+          <tr><th style="width:30%">Attribute</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          {% for key, value in attrs.items %}
+          <tr>
+            <td><code>{{ key }}</code></td>
+            <td>{{ value }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endwith %}
+{% else %}
+  <div class="alert alert-danger">Computer not found or could not be loaded.</div>
+{% endif %}
+
+<a href="{% url 'directory:computer_list' %}" class="btn btn-outline-secondary mt-3">&larr; Back to Computers</a>
+{% endblock %}

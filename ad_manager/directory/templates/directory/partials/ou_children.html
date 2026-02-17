@@ -1,0 +1,17 @@
+{% load ad_filters %}
+{% if children %}
+<ul class="list-unstyled ms-4 mt-1">
+  {% for entry in children %}
+  <li class="mb-1">
+    <span class="text-muted me-1">&#9656;</span>
+    <a href="{% url 'directory:ou_detail' encoded_dn=entry.dn|dn_encode %}">
+      {{ entry.attributes.ou|default:entry.dn|dn_short }}
+    </a>
+    <div hx-get="{% url 'directory:ou_children' encoded_dn=entry.dn|dn_encode %}"
+         hx-trigger="click from:previous a"
+         hx-swap="innerHTML">
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}

@@ -1,0 +1,15 @@
+[project]
+name = "ad-manager"
+version = "1.0.0"
+description = "Django-based Active Directory Management Application"
+requires-python = ">=3.11"
+
+[tool.black]
+line-length = 120
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_django = ["django"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "DJANGO", "FIRSTPARTY", "LOCALFOLDER"]

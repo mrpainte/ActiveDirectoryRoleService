@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load ad_filters %}
+
+{% block title %}Users{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Users</h2>
+  <div class="d-flex align-items-center gap-2">
+    <span class="badge bg-secondary">{{ results.total }} total</span>
+    {% if is_admin %}
+    <a href="{% url 'directory:user_create' %}" class="btn btn-success btn-sm">Create User</a>
+    {% endif %}
+  </div>
+</div>
+
+<form method="get" class="mb-4">
+  <div class="input-group">
+    <input type="text" name="q" class="form-control" placeholder="Search by name, email, or username..."
+           value="{{ query }}">
+    <button class="btn btn-primary" type="submit">Search</button>
+    {% if query %}
+    <a href="{% url 'directory:user_list' %}" class="btn btn-outline-secondary">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-striped table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>Name</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Status</th>
+        <th>Last Logon</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in results.entries %}
+      <tr>
+        <td>
+          <a href="{% url 'directory:user_detail' encoded_dn=entry.dn|dn_encode %}">
+            {{ entry.attributes.displayName|default:entry.attributes.sAMAccountName }}
+          </a>
+        </td>
+        <td>{{ entry.attributes.sAMAccountName }}</td>
+        <td>{{ entry.attributes.mail|default:"" }}</td>
+        <td>
+          {% with uac=entry.attributes.userAccountControl %}
+            {% if uac|default:0 %}
+              {% with flags=uac|decode_uac %}
+                {% if "ACCOUNTDISABLE" in flags %}
+                  <span class="badge bg-danger">Disabled</span>
+                {% else %}
+                  <span class="badge bg-success">Enabled</span>
+                {% endif %}
+              {% endwith %}
+            {% endif %}
+          {% endwith %}
+        </td>
+        <td>
+          {% with ts=entry.attributes.lastLogonTimestamp|ad_timestamp %}
+            {% if ts %}{{ ts|date:"Y-m-d H:i" }}{% else %}-{% endif %}
+          {% endwith %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="text-center text-muted py-4">No users found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if results.num_pages > 1 %}
+<nav aria-label="User pagination">
+  <ul class="pagination justify-content-center">
+    {% if results.page > 1 %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ results.page|add:"-1" }}{% if query %}&q={{ query }}{% endif %}">Previous</a>
+    </li>
+    {% endif %}
+    {% for p in results.page_range %}
+    <li class="page-item {% if p == results.page %}active{% endif %}">
+      <a class="page-link" href="?page={{ p }}{% if query %}&q={{ query }}{% endif %}">{{ p }}</a>
+    </li>
+    {% endfor %}
+    {% if results.page < results.num_pages %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ results.page|add:"1" }}{% if query %}&q={{ query }}{% endif %}">Next</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

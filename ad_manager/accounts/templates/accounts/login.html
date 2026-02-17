@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-5 col-lg-4">
+    <div class="card shadow">
+      <div class="card-body p-4">
+        <h4 class="card-title text-center mb-4">
+          {{ AD_DOMAIN }} Login
+        </h4>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        {% if form.errors %}
+          <div class="alert alert-danger">
+            Please correct the errors below.
+          </div>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="id_username" class="form-label">Username</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+              <div class="invalid-feedback d-block">{{ form.username.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label for="id_password" class="form-label">Password</label>
+            {{ form.password }}
+            {% if form.password.errors %}
+              <div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Sign In</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

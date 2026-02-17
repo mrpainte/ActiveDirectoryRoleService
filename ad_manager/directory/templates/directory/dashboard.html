@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load ad_filters %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Domain Dashboard</h2>
+
+{% if ldap_error %}
+<div class="alert alert-warning">
+  Some statistics could not be loaded. The LDAP server may be unreachable.
+</div>
+{% endif %}
+
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="card text-bg-primary h-100">
+      <div class="card-body">
+        <h5 class="card-title">Users</h5>
+        <p class="display-6">{{ total_users }}</p>
+        <a href="{% url 'directory:user_list' %}" class="text-white">View all &rarr;</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-bg-success h-100">
+      <div class="card-body">
+        <h5 class="card-title">Computers</h5>
+        <p class="display-6">{{ total_computers }}</p>
+        <a href="{% url 'directory:computer_list' %}" class="text-white">View all &rarr;</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-bg-info h-100">
+      <div class="card-body">
+        <h5 class="card-title">Groups</h5>
+        <p class="display-6">{{ total_groups }}</p>
+        <a href="/groups/" class="text-white">View all &rarr;</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-bg-warning h-100">
+      <div class="card-body">
+        <h5 class="card-title">Domain Controllers</h5>
+        <p class="display-6">{{ total_dcs }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if domain_controllers %}
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0">Domain Controllers</h5>
+  </div>
+  <div class="card-body">
+    <table class="table table-sm table-striped mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>DNS Name</th>
+          <th>Operating System</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dc in domain_controllers %}
+        <tr>
+          <td>{{ dc.attributes.cn }}</td>
+          <td>{{ dc.attributes.dNSHostName|default:"" }}</td>
+          <td>{{ dc.attributes.operatingSystem|default:"" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Quick Links</h5>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <a href="{% url 'directory:user_list' %}" class="btn btn-outline-primary w-100">Browse Users</a>
+      </div>
+      <div class="col-md-4">
+        <a href="{% url 'directory:computer_list' %}" class="btn btn-outline-success w-100">Browse Computers</a>
+      </div>
+      <div class="col-md-4">
+        <a href="{% url 'directory:ou_tree' %}" class="btn btn-outline-secondary w-100">Browse OU Tree</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

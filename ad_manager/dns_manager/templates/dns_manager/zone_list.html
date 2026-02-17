@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}DNS Zones{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">DNS Zones</h1>
+
+{% if zones %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Zone Name</th>
+                <th>Distinguished Name</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for zone in zones %}
+            <tr>
+                <td>
+                    <a href="{% url 'dns_manager:record_list' encoded_dn=zone.encoded_dn %}">
+                        {{ zone.attributes.dc|default:zone.attributes.name }}
+                    </a>
+                </td>
+                <td><code>{{ zone.dn|truncatechars:80 }}</code></td>
+                <td>{{ zone.attributes.whenCreated|default:"-" }}</td>
+                <td>
+                    <a href="{% url 'dns_manager:record_list' encoded_dn=zone.encoded_dn %}" class="btn btn-sm btn-primary">View Records</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No DNS zones found.</div>
+{% endif %}
+{% endblock %}

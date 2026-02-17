@@ -1,0 +1,41 @@
+/* Sidebar layout */
+#sidebar {
+  min-width: 220px;
+  max-width: 220px;
+  min-height: 100vh;
+  padding-top: 56px; /* height of fixed navbar */
+}
+
+#page-content-wrapper {
+  padding-top: 56px; /* height of fixed navbar */
+  min-height: 100vh;
+}
+
+#sidebar .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* OU tree nodes */
+.tree-node {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.tree-node:hover {
+  background-color: #f0f0f0;
+}
+
+.tree-children {
+  margin-left: 1.25rem;
+  border-left: 1px solid #dee2e6;
+  padding-left: 0.5rem;
+}
+
+.tree-toggle {
+  display: inline-block;
+  width: 1rem;
+  text-align: center;
+  cursor: pointer;
+}

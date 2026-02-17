@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Group: {{ group.attributes.cn }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'groups:group_list' %}">Groups</a></li>
+        <li class="breadcrumb-item active">{{ group.attributes.cn }}</li>
+    </ol>
+</nav>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="mb-0">{{ group.attributes.cn }}</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Distinguished Name</dt>
+            <dd class="col-sm-9"><code>{{ group.dn }}</code></dd>
+
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">{{ group.attributes.description|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Managed By</dt>
+            <dd class="col-sm-9">{{ group.attributes.managedBy|default:"-" }}</dd>
+
+            <dt class="col-sm-3">Created</dt>
+            <dd class="col-sm-9">{{ group.attributes.whenCreated|default:"-" }}</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Members ({{ members|length }})</h5>
+    </div>
+    <div class="card-body">
+        {% if can_manage %}
+        <form method="post" action="{% url 'groups:group_add_member' encoded_dn=encoded_dn %}" class="mb-3">
+            {% csrf_token %}
+            <div class="input-group">
+                <input type="text" id="member-search" class="form-control" placeholder="Search for a user to add..." autocomplete="off">
+                <input type="hidden" name="member_dn" id="member-dn">
+                <button type="submit" class="btn btn-success" id="add-member-btn" disabled>Add Member</button>
+            </div>
+            <div id="member-search-results" class="list-group mt-1" style="position:absolute;z-index:10;"></div>
+        </form>
+        {% endif %}
+
+        {% if members %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Display Name</th>
+                        <th>Distinguished Name</th>
+                        {% if can_manage %}
+                        <th>Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td>{{ member.display_name }}</td>
+                        <td><code>{{ member.dn }}</code></td>
+                        {% if can_manage %}
+                        <td>
+                            <form method="post" action="{% url 'groups:group_remove_member' encoded_dn=encoded_dn %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="member_dn" value="{{ member.dn }}">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Remove this member?');">Remove</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No members in this group.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

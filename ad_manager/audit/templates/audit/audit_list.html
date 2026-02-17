@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Log{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Audit Log</h2>
+    <div>
+        <a href="{% url 'audit:export' %}?{{ request.GET.urlencode }}&format=csv" class="btn btn-outline-secondary btn-sm">Export CSV</a>
+        <a href="{% url 'audit:export' %}?{{ request.GET.urlencode }}&format=json" class="btn btn-outline-secondary btn-sm">Export JSON</a>
+    </div>
+</div>
+
+<form method="get" class="card mb-4">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label form-label-sm">From</label>
+                <input type="date" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label form-label-sm">To</label>
+                <input type="date" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label form-label-sm">Category</label>
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    {% for value, label in category_choices %}
+                    <option value="{{ value }}" {% if filters.category == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label form-label-sm">Username</label>
+                <input type="text" name="username" class="form-control form-control-sm" value="{{ filters.username }}" placeholder="Search...">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label form-label-sm">Action</label>
+                <input type="text" name="action" class="form-control form-control-sm" value="{{ filters.action }}" placeholder="Search...">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label form-label-sm">Status</label>
+                <select name="success" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option value="true" {% if filters.success == "true" %}selected{% endif %}>Success</option>
+                    <option value="false" {% if filters.success == "false" %}selected{% endif %}>Failed</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Category</th>
+                <th>Target</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td><a href="{% url 'audit:detail' entry.pk %}">{{ entry.timestamp|date:"Y-m-d H:i:s" }}</a></td>
+                <td>{{ entry.username }}</td>
+                <td><code>{{ entry.action }}</code></td>
+                <td>{{ entry.get_category_display }}</td>
+                <td class="text-truncate" style="max-width: 250px;" title="{{ entry.target_dn }}">{{ entry.target_dn }}</td>
+                <td>
+                    {% if entry.success %}
+                    <span class="badge bg-success">Success</span>
+                    {% else %}
+                    <span class="badge bg-danger">Failed</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">No audit entries found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?{% for k, v in filters.items %}{% if v %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+            <li class="page-item">
+                <a class="page-link" href="?{% for k, v in filters.items %}{% if v %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?{% for k, v in filters.items %}{% if v %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

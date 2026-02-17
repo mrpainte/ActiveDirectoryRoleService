@@ -1,0 +1,9 @@
+Django>=5.1,<5.2
+psycopg2-binary>=2.9
+ldap3>=2.9
+celery[redis]>=5.4
+django-celery-beat>=2.6
+boto3>=1.35
+dnspython>=2.7
+gssapi>=1.8
+gunicorn>=23.0

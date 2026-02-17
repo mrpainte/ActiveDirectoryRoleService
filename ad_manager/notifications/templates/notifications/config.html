@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Notification Configuration{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Notification Configuration</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    {% if form.errors %}
+    <div class="alert alert-danger">
+        Please correct the errors below.
+    </div>
+    {% endif %}
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#general" role="tab">General</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#smtp" role="tab">SMTP</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#ses" role="tab">Amazon SES</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="general" role="tabpanel">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Backend Type</label>
+                            <select name="backend_type" class="form-select">
+                                {% for value, label in form.fields.backend_type.choices %}
+                                <option value="{{ value }}" {% if form.backend_type.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">From Email</label>
+                            {{ form.from_email }}
+                            {% if form.from_email.errors %}<div class="invalid-feedback d-block">{{ form.from_email.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Warning Days (comma-separated)</label>
+                            {{ form.warn_days }}
+                            <div class="form-text">Days before password expiry to send warnings.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" name="enabled" class="form-check-input" id="id_enabled" {% if form.enabled.value %}checked{% endif %}>
+                                <label class="form-check-label" for="id_enabled">Notifications Enabled</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="smtp" role="tabpanel">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">SMTP Host</label>
+                            {{ form.smtp_host }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">SMTP Port</label>
+                            {{ form.smtp_port }}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">SMTP Username</label>
+                            {{ form.smtp_username }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">SMTP Password</label>
+                            {{ form.smtp_password }}
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" name="smtp_use_tls" class="form-check-input" id="id_smtp_use_tls" {% if form.smtp_use_tls.value %}checked{% endif %}>
+                        <label class="form-check-label" for="id_smtp_use_tls">Use TLS</label>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="ses" role="tabpanel">
+                    <div class="mb-3">
+                        <label class="form-label">AWS Region</label>
+                        {{ form.ses_region }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Access Key ID</label>
+                        {{ form.ses_access_key_id }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Secret Access Key</label>
+                        {{ form.ses_secret_access_key }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Configuration</button>
+</form>
+{% endblock %}

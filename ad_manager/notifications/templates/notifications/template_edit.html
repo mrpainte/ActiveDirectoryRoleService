@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Template: {{ email_template.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Edit Template: <code>{{ email_template.name }}</code></h2>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#syntaxRefModal">
+            Template Syntax Reference
+        </button>
+        <a href="{% url 'notifications:template_preview' email_template.pk %}" class="btn btn-outline-warning btn-sm">Test &amp; Preview</a>
+        <a href="{% url 'notifications:template_list' %}" class="btn btn-outline-secondary btn-sm">Back to List</a>
+    </div>
+</div>
+
+{% if form.errors %}
+<div class="alert alert-danger">
+    Please correct the errors below.
+</div>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        {{ form.name }}
+        {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>{% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Subject</label>
+        {{ form.subject }}
+        <div class="form-text">Supports Django template variables like <code>{{ "{{ display_name }}" }}</code>. Click "Template Syntax Reference" above for help.</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">HTML Body</label>
+        {{ form.body_html }}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Plain Text Body</label>
+        {{ form.body_text }}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        {{ form.description }}
+        <div class="form-text">Document the available template variables for this template (shown to other admins).</div>
+    </div>
+
+    <div class="form-check mb-3">
+        <input type="checkbox" name="is_active" class="form-check-input" id="id_is_active" {% if form.is_active.value %}checked{% endif %}>
+        <label class="form-check-label" for="id_is_active">Active</label>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save Template</button>
+        <a href="{% url 'notifications:template_preview' email_template.pk %}" class="btn btn-outline-warning">Test &amp; Preview</a>
+    </div>
+</form>
+
+<!-- Syntax Reference Modal (same as preview page) -->
+<div class="modal fade" id="syntaxRefModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Django Template Syntax Reference</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6 class="fw-bold mt-0">Variables</h6>
+                <p>Insert dynamic values using double curly braces:</p>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr><th>Syntax</th><th>Description</th><th>Example Output</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{{ "{{ display_name }}" }}</code></td><td>User's full display name</td><td>John Doe</td></tr>
+                        <tr><td><code>{{ "{{ username }}" }}</code></td><td>User's sAMAccountName</td><td>jdoe</td></tr>
+                        <tr><td><code>{{ "{{ email }}" }}</code></td><td>User's email address</td><td>jdoe@example.com</td></tr>
+                        <tr><td><code>{{ "{{ domain }}" }}</code></td><td>AD domain name</td><td>EXAMPLE</td></tr>
+                        <tr><td><code>{{ "{{ temporary_password }}" }}</code></td><td>Temp password (welcome emails)</td><td>T3mp!Pass_Ex@mple</td></tr>
+                        <tr><td><code>{{ "{{ days_until_expiry }}" }}</code></td><td>Days until password expires</td><td>7</td></tr>
+                        <tr><td><code>{{ "{{ expiry_date }}" }}</code></td><td>Password expiration date</td><td>March 15, 2026</td></tr>
+                        <tr><td><code>{{ "{{ reset_link }}" }}</code></td><td>Password reset URL</td><td>https://...</td></tr>
+                    </tbody>
+                </table>
+                <div class="alert alert-info small">
+                    <strong>Tip:</strong> You can invent your own variables. Just use <code>{{ "{{ my_var }}" }}</code> in the body, and supply a value when sending via the Send Email page.
+                </div>
+
+                <h6 class="fw-bold mt-4">Filters</h6>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light"><tr><th>Syntax</th><th>Result</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>{{ "{{ name|upper }}" }}</code></td><td>JOHN DOE</td></tr>
+                        <tr><td><code>{{ "{{ name|lower }}" }}</code></td><td>john doe</td></tr>
+                        <tr><td><code>{{ "{{ name|title }}" }}</code></td><td>John Doe</td></tr>
+                        <tr><td><code>{{ "{{ email|default:'N/A' }}" }}</code></td><td>Fallback if empty</td></tr>
+                        <tr><td><code>{{ "{{ count|add:1 }}" }}</code></td><td>Adds to a number</td></tr>
+                    </tbody>
+                </table>
+
+                <h6 class="fw-bold mt-4">Conditionals</h6>
+<pre class="bg-light p-2 rounded"><code>{% verbatim %}{% if days_until_expiry <= 3 %}
+  &lt;strong style="color:red"&gt;URGENT&lt;/strong&gt;
+{% elif days_until_expiry <= 7 %}
+  &lt;span style="color:orange"&gt;Warning&lt;/span&gt;
+{% else %}
+  Reminder
+{% endif %}{% endverbatim %}</code></pre>
+
+                <h6 class="fw-bold mt-4">Full Example</h6>
+<pre class="bg-light p-2 rounded"><code>{% verbatim %}&lt;h2&gt;Hello {{ display_name }},&lt;/h2&gt;
+&lt;p&gt;Message from the {{ domain }} IT team.&lt;/p&gt;
+{% if action_required %}
+  &lt;p&gt;&lt;strong&gt;Action:&lt;/strong&gt; {{ action_message }}&lt;/p&gt;
+{% endif %}
+&lt;p&gt;Contact: {{ support_email|default:"it@example.com" }}&lt;/p&gt;{% endverbatim %}</code></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

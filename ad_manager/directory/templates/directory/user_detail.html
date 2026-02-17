@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% load ad_filters %}
+
+{% block title %}User Detail{% endblock %}
+
+{% block content %}
+{% if user_obj %}
+  {% with attrs=user_obj.attributes %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2>{{ attrs.displayName|default:attrs.sAMAccountName }}</h2>
+      <p class="text-muted mb-0">{{ user_obj.dn }}</p>
+    </div>
+    <div>
+      {% with flags=attrs.userAccountControl|decode_uac %}
+        {% if "ACCOUNTDISABLE" in flags %}
+          <span class="badge bg-danger fs-6">Disabled</span>
+        {% else %}
+          <span class="badge bg-success fs-6">Enabled</span>
+        {% endif %}
+        {% if "LOCKOUT" in flags %}
+          <span class="badge bg-warning text-dark fs-6">Locked</span>
+        {% endif %}
+      {% endwith %}
+    </div>
+  </div>
+
+  <!-- Action Buttons (Admin/HelpDesk only) -->
+  {% if is_admin or is_helpdesk %}
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Actions</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+            Reset Password
+          </button>
+        </div>
+        <div class="col-md-4">
+          <form method="post" action="{% url 'directory:user_toggle' encoded_dn=encoded_dn %}">
+            {% csrf_token %}
+            {% with flags=attrs.userAccountControl|decode_uac %}
+              {% if "ACCOUNTDISABLE" in flags %}
+                <input type="hidden" name="action" value="enable">
+                <button type="submit" class="btn btn-success w-100">Enable Account</button>
+              {% else %}
+                <input type="hidden" name="action" value="disable">
+                <button type="submit" class="btn btn-danger w-100">Disable Account</button>
+              {% endif %}
+            {% endwith %}
+          </form>
+        </div>
+        <div class="col-md-4">
+          <form method="post" action="{% url 'directory:user_unlock' encoded_dn=encoded_dn %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-info w-100">Unlock Account</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- User Attributes -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">User Attributes</h5>
+    </div>
+    <div class="card-body">
+      <table class="table table-sm">
+        <tbody>
+          <tr><th style="width:30%">Display Name</th><td>{{ attrs.displayName|default:"-" }}</td></tr>
+          <tr><th>Username (sAMAccountName)</th><td>{{ attrs.sAMAccountName|default:"-" }}</td></tr>
+          <tr><th>First Name</th><td>{{ attrs.givenName|default:"-" }}</td></tr>
+          <tr><th>Last Name</th><td>{{ attrs.sn|default:"-" }}</td></tr>
+          <tr><th>Email</th><td>{{ attrs.mail|default:"-" }}</td></tr>
+          <tr><th>Title</th><td>{{ attrs.title|default:"-" }}</td></tr>
+          <tr><th>Department</th><td>{{ attrs.department|default:"-" }}</td></tr>
+          <tr><th>Company</th><td>{{ attrs.company|default:"-" }}</td></tr>
+          <tr><th>Phone</th><td>{{ attrs.telephoneNumber|default:"-" }}</td></tr>
+          <tr><th>Description</th><td>{{ attrs.description|default:"-" }}</td></tr>
+          <tr>
+            <th>Account Created</th>
+            <td>{{ attrs.whenCreated|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th>Last Logon</th>
+            <td>
+              {% with ts=attrs.lastLogonTimestamp|ad_timestamp %}
+                {% if ts %}{{ ts|date:"Y-m-d H:i:s T" }}{% else %}-{% endif %}
+              {% endwith %}
+            </td>
+          </tr>
+          <tr>
+            <th>Password Last Set</th>
+            <td>
+              {% with ts=attrs.pwdLastSet|ad_timestamp %}
+                {% if ts %}{{ ts|date:"Y-m-d H:i:s T" }}{% else %}-{% endif %}
+              {% endwith %}
+            </td>
+          </tr>
+          <tr>
+            <th>UAC Flags</th>
+            <td>
+              {% for flag in attrs.userAccountControl|decode_uac %}
+                <span class="badge bg-secondary me-1">{{ flag }}</span>
+              {% endfor %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Group Memberships -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Group Memberships ({{ user_groups|length }})</h5>
+    </div>
+    <div class="card-body">
+      {% if user_groups %}
+      <ul class="list-group list-group-flush">
+        {% for group_dn in user_groups %}
+        <li class="list-group-item">
+          <strong>{{ group_dn|dn_short }}</strong>
+          <br><small class="text-muted">{{ group_dn }}</small>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="text-muted mb-0">No group memberships found.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% endwith %}
+
+  <!-- Reset Password Modal -->
+  {% if is_admin or is_helpdesk %}
+  <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="post" action="{% url 'directory:user_reset_password' encoded_dn=encoded_dn %}" id="resetPasswordForm">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title">Reset Password</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="new_password" class="form-label">New Password</label>
+              <div class="input-group">
+                <input type="text" class="form-control font-monospace" id="new_password" name="new_password" required>
+                <button type="button" class="btn btn-outline-secondary" id="resetToggleVis" title="Toggle visibility">
+                  &#128065;
+                </button>
+                <button type="button" class="btn btn-info" id="resetGenerateBtn">Generate</button>
+              </div>
+            </div>
+            <div id="resetPasswordRules" class="mb-0">
+              <small class="text-muted">Password requirements:</small>
+              <ul class="list-unstyled mb-0 ms-2">
+                <li id="reset-rule-length"><small class="text-muted">&#9679; At least 15 characters</small></li>
+                <li id="reset-rule-upper"><small class="text-muted">&#9679; At least 1 uppercase letter</small></li>
+                <li id="reset-rule-lower"><small class="text-muted">&#9679; At least 1 lowercase letter</small></li>
+                <li id="reset-rule-number"><small class="text-muted">&#9679; At least 1 number</small></li>
+                <li id="reset-rule-special"><small class="text-muted">&#9679; At least 1 special character</small></li>
+              </ul>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-warning" id="resetSubmitBtn">Reset Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+{% else %}
+  <div class="alert alert-danger">User not found or could not be loaded.</div>
+{% endif %}
+
+<a href="{% url 'directory:user_list' %}" class="btn btn-outline-secondary mt-3">&larr; Back to Users</a>
+{% endblock %}
+
+{% block extra_js %}
+{% if is_admin or is_helpdesk %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const pwField = document.getElementById('new_password');
+    const generateBtn = document.getElementById('resetGenerateBtn');
+    const toggleBtn = document.getElementById('resetToggleVis');
+
+    if (!pwField) return;
+
+    const rules = {
+        length:  { el: document.getElementById('reset-rule-length'),  test: pw => pw.length >= 15 },
+        upper:   { el: document.getElementById('reset-rule-upper'),   test: pw => /[A-Z]/.test(pw) },
+        lower:   { el: document.getElementById('reset-rule-lower'),   test: pw => /[a-z]/.test(pw) },
+        number:  { el: document.getElementById('reset-rule-number'),  test: pw => /[0-9]/.test(pw) },
+        special: { el: document.getElementById('reset-rule-special'), test: pw => /[^A-Za-z0-9]/.test(pw) },
+    };
+
+    function checkRules() {
+        const pw = pwField.value;
+        for (const [key, rule] of Object.entries(rules)) {
+            const passed = rule.test(pw);
+            const small = rule.el.querySelector('small');
+            if (passed) {
+                small.className = 'text-success';
+                small.innerHTML = small.innerHTML.replace('&#9679;', '&#10003;').replace('\u25CF', '\u2713');
+            } else {
+                small.className = 'text-muted';
+                small.innerHTML = small.innerHTML.replace('&#10003;', '&#9679;').replace('\u2713', '\u25CF');
+            }
+        }
+    }
+
+    pwField.addEventListener('input', checkRules);
+
+    generateBtn.addEventListener('click', function() {
+        fetch('{% url "directory:generate_password" %}')
+            .then(response => response.json())
+            .then(data => {
+                pwField.value = data.password;
+                pwField.type = 'text';
+                checkRules();
+            });
+    });
+
+    let visible = true;
+    toggleBtn.addEventListener('click', function() {
+        visible = !visible;
+        pwField.type = visible ? 'text' : 'password';
+    });
+});
+</script>
+{% endif %}
+{% endblock %}
